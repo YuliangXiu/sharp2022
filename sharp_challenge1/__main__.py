@@ -23,6 +23,7 @@ def _do_convert(args):
 
 def identify_meshes(dir_):
     """List meshes and identify the challenge in a directory tree."""
+    print(dir_)
     meshes_challenge1 = list(dir_.glob("**/*_normalized.npz"))
     meshes_challenge2 = list(dir_.glob("**/model_*.obj"))
     if meshes_challenge1:
@@ -293,7 +294,7 @@ def _parse_args():
     parser_crop_dir.add_argument(
         "--nWorkers",
         type=int,
-        default=1,
+        default=12,
         help="Number of parallel processes. By default, the number of"
         " available processors.",
     )
@@ -379,5 +380,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.WARNING)
     main()

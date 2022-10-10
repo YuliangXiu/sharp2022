@@ -11,3 +11,5 @@ pandas
 wandb
 pytorch-lightning
 PyMCubes
+nptying
+moderngl==5.6.0

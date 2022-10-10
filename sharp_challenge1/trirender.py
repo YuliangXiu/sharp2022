@@ -1,6 +1,6 @@
 from typing import Any, Tuple
 import numpy as np
-from nptyping import NDArray
+from nptyping import NDArray, Int, Shape, Float
 import moderngl as MGL
 
 
@@ -106,14 +106,14 @@ class UVTrianglesRenderer:
 
     def render(
         self,
-        tex_coords: NDArray[(Any, 2), float],
-        tri_indices: NDArray[(Any, 3), int],
-        texture: NDArray[(Any, Any, 3), float],
+        tex_coords: NDArray[Shape["N, 2"], Float],
+        tri_indices: NDArray[Shape["N, 3"], Int],
+        texture: NDArray[Shape["N,N,3"], Float],
         flip_y: bool = True,
-    ) -> NDArray[(Any, Any, 3), float]:
-        assert isinstance(tex_coords, NDArray[(Any, 2), float])
-        assert isinstance(tri_indices, NDArray[(Any, 3), int])
-        assert isinstance(texture, NDArray[(Any, Any, 3), float])
+    ) -> NDArray[Shape["N,N,3"], Float]:
+        assert isinstance(tex_coords, NDArray[Shape["N,2"], Float])
+        assert isinstance(tri_indices, NDArray[Shape["N,3"], Int])
+        assert isinstance(texture, NDArray[Shape["N,N,3"], Float])
 
         if flip_y:
             texture = np.flipud(texture)

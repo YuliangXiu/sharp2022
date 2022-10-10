@@ -43,12 +43,14 @@ python setup.py build_ext --inplace
 ```
 
 ## Data Preparation
-Please participate in the Sharp challenge to gain access of the dataset and the preprocessing tools. [Download](https://cvi2.uni.lu/3dbodytexv2/) and unzip the data of Challange 1 into `dataset/SHARP2022/` such that the data is stored as `dataset/SHARP2022/challenge1/{track1,track2}/{test,train}/File_ID/Files`, we show the data preparation procedures for track 1 and track 2 data can be prepared in a similar manner.
+Please participate in the Sharp challenge to gain access of the dataset and the preprocessing tools. [Download](https://cvi2.uni.lu/3dbodytexv2/) and unzip the data of Challange 1 into `dataset/SHARP2022/` such that the data is stored as `dataset/SHARP2022/challenge1/{test,train}/File_ID/Files`, we show the data preparation procedures for track 1 and track 2 data can be prepared in a similar manner.
 
 Next, folow their official data preprocessing protocal, we create 4 different, random partial scans for each complete human scan with
 
 ```
-python -m sharp_challenge1 do_crop_dir dataset/SHARP2022/challenge1-track1 dataset/SHARP2022/challenge1-track1 --nViews 4
+python -m sharp_challenge1 do_crop_dir dataset/SHARP2022/challenge1/train dataset/SHARP2022/challenge1/train --mask_dir dataset/SHARP2022/challenge1/train-masks --nViews 4
+
+python -m sharp_challenge1 do_crop_dir dataset/SHARP2022/challenge1/test dataset/SHARP2022/challenge1/test --mask_dir dataset/SHARP2022/challenge1/test-masks --nViews 4
 ```
 
 and convert everything to `.obj`-Format.
