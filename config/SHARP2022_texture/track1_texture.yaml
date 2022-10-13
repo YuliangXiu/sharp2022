@@ -7,9 +7,9 @@ dataset: TextureDataset
 trainer: TextureTrainer
 exp_name: SHARP2022_c1_t1_texture
 refine_with_estimated_smpl: true
-data_path: ../dataset/SHARP2022/challenge1/track1/
+data_path: ./dataset/SHARP2022/challenge1
 data_bounding_box: [-0.8, 0.8, -0.15, 2.1, -0.8, 0.8]
-split_file: ../dataset/SHARP2022/split_geometry.npz
+split_file: ./dataset/SHARP2022/challenge1/split_texture.npz
 overlap_score_threshold: 0.25
 n_points_score: 100000
 noise_sigmas: 0.01
@@ -27,7 +27,7 @@ preprocessing:
  voxelized_pointcloud_sampling:
   input_files_regex: /*/*/*-partial*.obj
  voxelized_colored_pointcloud_sampling:
-  input_files_regex: /train_partial/*/*-partial-*.obj
+  input_files_regex: /*/*/*-partial-*.obj
   sigma: 0.015
 
 balanced_loss: false

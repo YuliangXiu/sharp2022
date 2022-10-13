@@ -48,6 +48,28 @@ class SMPLArmature:
     'left finger tip', 'right finger tip', 'left toe tip', 'right toe tip',
     'head_top'
   ]
+  
+  
+  # labels = [
+  #   0'pelvis',
+  #   1'left leg root', 2'right leg root',
+  #   3'lowerback',
+  #   4'left knee', 5'right knee',
+  #   6'upperback',
+  #   7'left ankle', 8'right ankle',
+  #   9'thorax',
+  #   10'left toes', 11'right toes',
+  #   12'lowerneck',
+  #   13'left clavicle', 14'right clavicle',
+  #   15'upperneck',
+  #   16'left armroot', 17'right armroot',
+  #   18'left elbow', 19'right elbow',
+  #   20'left wrist', 21'right wrist',
+  #   22'left hand', 23'right hand'
+  #   # extended
+  #   'left finger tip', 'right finger tip', 'left toe tip', 'right toe tip',
+  #   'head_top'
+  # ]
 
 
 class SMPLHArmature:

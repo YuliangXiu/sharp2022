@@ -2,6 +2,7 @@ import numpy as np
 import os
 import numpy as np
 from glob import glob
+from tqdm import tqdm
 import argparse
 import config.config_loader as cfg_loader
 
@@ -27,12 +28,12 @@ if __name__ == '__main__':
 
     cfg = cfg_loader.load(args.config)
 
-    type_mode = 'test'
+    type_mode = 'train'
     paths = glob(os.path.join(
         cfg['data_path'], type_mode, '*/landmarks3d.txt'))
 
 
-    for path in paths:
+    for path in tqdm(paths):
         np_pose = read_pose3d(path)
         path_dir = os.path.dirname(path)
         gt_file_name = path_dir.split(os.sep)[-1]
@@ -46,5 +47,5 @@ if __name__ == '__main__':
         out_dir = os.path.join(cfg['data_path'], file_type + '_smpl',
                                gt_file_name)
         os.makedirs(out_dir, exist_ok=True)
-        print(out_file)
+        # print(out_file)
         np.save(out_file, np_pose)

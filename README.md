@@ -89,8 +89,7 @@ python src/data_processing/sample_voxelized_colored_pointcloud.py config/SHARP20
 To generate SMPL models and meshes of the predicted poses for shape fusion, run
 
 ```
-python src/data_processing/smpl_tools/pose2smpl.py config/SHARP2022_texture/track1_texture.yaml
-python src/data_processing/smpl_tools/smpl2obj.py config/SHARP2022_texture/track1_texture.yaml
+python src/data_processing/smpl_tools/pose2smpl.py
 ```
 
 Finally, a data split into training, test and validation is created with

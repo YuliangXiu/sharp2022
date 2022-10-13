@@ -1,13 +1,13 @@
 import trimesh
 import numpy as np
-import data_processing.implicit_waterproofing as iw
+import implicit_waterproofing as iw
 from glob import glob
 import multiprocessing as mp
 from multiprocessing import Pool
 import argparse
 import os
 import traceback
-import data_processing.utils as utils
+import utils as utils
 import tqdm
 import config.config_loader as cfg_loader
 
@@ -42,7 +42,7 @@ def boundary_sampling(mesh_path):
         occupancies = iw.implicit_waterproofing(mesh, boundary_points)[0]
 
         np.savez(out_file, points=boundary_points, occupancies = occupancies, grid_coords= utils.to_grid_sample_coords(boundary_points, bbox))
-        print('Finished {}'.format(out_file))
+        # print('Finished {}'.format(out_file))
     except:
         print('Error with {}: {}'.format(path, traceback.format_exc()))
 

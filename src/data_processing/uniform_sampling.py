@@ -17,12 +17,6 @@ import trimesh
 def boundary_sampling(mesh_path):
     try:
 
-        # if os.path.exists(path +'/boundary_{}_samples.npz'.format(args.sigma)):
-        #     return
-
-        # off_path = path + '/isosurf_scaled.off'
-        # out_file = path +'/boundary_{}_samples.npz'.format(args.sigma)
-
         path = os.path.normpath(mesh_path)
         gt_file_name = path.split(os.sep)[-2]
         full_file_name = path.split(os.sep)[-1][:-4]

@@ -28,31 +28,31 @@ class SMPL_Layer(Module):
         self.gender = gender
 
         if gender == 'neutral':
-            self.model_path = os.path.join(model_root, 'basicmodel_neutral_lbs_10_207_0_v1.1.0.pkl')
+            self.model_path = os.path.join(model_root, 'SMPL_NEUTRAL.pkl')
         elif gender == 'female':
-            self.model_path = os.path.join(model_root, 'basicModel_f_lbs_10_207_0_v1.0.0.pkl')
+            self.model_path = os.path.join(model_root, 'SMPL_FEMALE.pkl')
         elif gender == 'male':
-            self.model_path = os.path.join(model_root, 'basicModel_m_lbs_10_207_0_v1.0.0.pkl')
+            self.model_path = os.path.join(model_root, 'SMPL_MALE.pkl')
 
         smpl_data = ready_arguments(self.model_path)
         self.smpl_data = smpl_data
 
         self.register_buffer('th_betas',
-                             torch.Tensor(smpl_data['betas'].r).unsqueeze(0))
+                             torch.tensor(smpl_data['betas'].r).float().unsqueeze(0))
         self.register_buffer('th_shapedirs',
-                             torch.Tensor(smpl_data['shapedirs'].r))
+                             torch.tensor(smpl_data['shapedirs'].r).float())
         self.register_buffer('th_posedirs',
-                             torch.Tensor(smpl_data['posedirs'].r))
+                             torch.tensor(smpl_data['posedirs'].r).float())
         self.register_buffer(
             'th_v_template',
-            torch.Tensor(smpl_data['v_template'].r).unsqueeze(0))
+            torch.tensor(smpl_data['v_template'].r).float().unsqueeze(0))
         self.register_buffer(
             'th_J_regressor',
-            torch.Tensor(np.array(smpl_data['J_regressor'].toarray())))
+            torch.tensor(np.array(smpl_data['J_regressor'].toarray())).float())
         self.register_buffer('th_weights',
-                             torch.Tensor(smpl_data['weights'].r))
+                             torch.tensor(smpl_data['weights'].r).float())
         self.register_buffer('th_faces',
-                             torch.Tensor(smpl_data['f'].astype(np.int32)).long())
+                             torch.tensor(smpl_data['f'].astype(np.int32)).long())
 
         # Kinematic chain params
         self.kintree_table = smpl_data['kintree_table']

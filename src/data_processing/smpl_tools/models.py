@@ -19,7 +19,7 @@ class KinematicModel():
       Scale of the model to make the solving easier, by default 1
     """
     with open(model_path, 'rb') as f:
-      params = pickle.load(f)
+      params = pickle.load(f, encoding='latin1')
 
       self.pose_pca_basis = params['pose_pca_basis']
       self.pose_pca_mean = params['pose_pca_mean']

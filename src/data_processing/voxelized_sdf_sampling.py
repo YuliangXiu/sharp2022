@@ -92,9 +92,6 @@ if __name__ == '__main__':
     print('Fining all input partial paths for voxelization.')
     paths = glob(cfg['data_path'] + cfg['preprocessing']['voxelized_pointcloud_sampling']['input_files_regex'])
 
-    #debug
-    voxelized_sdf_sampling("dataset/SHARP2022/train/170410-011-a-ftrm-34b3-low-res-result/170410-011-a-ftrm-34b3-low-res-result_normalized.obj")
-    
     print('Start voxelization.')
     p = Pool(mp.cpu_count())
     for _ in tqdm.tqdm(p.imap_unordered(voxelized_sdf_sampling, paths), total=len(paths)):

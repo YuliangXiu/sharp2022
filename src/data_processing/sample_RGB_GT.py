@@ -6,7 +6,7 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import argparse
 import config.config_loader as cfg_loader
-import data_processing.utils as utils
+import utils
 import traceback
 import tqdm
 
@@ -77,6 +77,8 @@ if __name__ == '__main__':
 
     print('Fining all gt object paths for point and RGB sampling.')
     paths = glob(cfg['data_path'] + cfg['preprocessing']
+                 ['color_sampling']['input_files_regex'])
+    print(cfg['data_path'] + cfg['preprocessing']
                  ['color_sampling']['input_files_regex'])
 
     print('Start sampling.')

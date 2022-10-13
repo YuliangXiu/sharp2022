@@ -2,6 +2,7 @@ __pycache__
 *.so
 build/
 *.pyc
+*.pkl
 *.c
 experiments
 dataset/*
@@ -10,3 +11,4 @@ dataset/*
 !.gitkeep
 log/*
 .DS_Store
+.vscode

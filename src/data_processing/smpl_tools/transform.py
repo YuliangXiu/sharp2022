@@ -11,10 +11,5 @@ rotate = {
  
 
 def transform(name, arr: np.ndarray):
-    for i in range(arr.shape[0]):
-        origin = arr[i][0].copy()
-        for j in range(arr.shape[1]):
-            arr[i][j] -= origin
-            for k in range(3):
-                arr[i][j][k] *= rotate[name][k]
+    arr[:,:,1] -= arr[:,8,1]
     return arr

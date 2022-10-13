@@ -23,7 +23,7 @@ if __name__ == "__main__":
                         default='', type=str)
     args = parser.parse_args()
     cfg = get_config(args)
-    data_map = {tp[0]:t[[1]] for tp in cfg.DATASET.DATA_MAP}
+    data_map = {tp[0]:tp[[1]] for tp in cfg.DATASET.DATA_MAP}
 
     paths = glob(cfg.DATASET.PATH  + "/*/*.npy")
     for path_full in paths:

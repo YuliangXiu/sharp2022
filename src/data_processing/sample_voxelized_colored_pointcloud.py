@@ -10,8 +10,7 @@ import random
 import config.config_loader as cfg_loader
 import traceback
 import tqdm
-import data_processing.utils as utils
-
+import utils
 
 def voxelized_colored_pointcloud_sampling(partial_mesh_path):
     try:
@@ -22,9 +21,9 @@ def voxelized_colored_pointcloud_sampling(partial_mesh_path):
         out_file = os.path.dirname(partial_mesh_path) + '/{}_voxelized_colored_point_cloud_res{}_points{}_bbox{}_sigma{}.npz'\
             .format(full_file_name, res, num_points, bbox_str, sigma)
 
-        if os.path.exists(out_file):
-            print('File exists. Done.')
-            return
+        # if os.path.exists(out_file):
+        #     # print('File exists. Done.')
+        #     return
 
         # color from partial input
         partial_mesh = utils.as_mesh(trimesh.load(partial_mesh_path))
@@ -63,13 +62,8 @@ def voxelized_colored_pointcloud_sampling(partial_mesh_path):
 
         # encode uncolorized, complete shape of object (at inference time obtained from IF-Nets surface reconstruction)
         # encoding is done by sampling a pointcloud and voxelizing it (into discrete grid for 3D CNN usage)
-        if "test_partial" in os.path.dirname(partial_mesh_path):
-            path_full = os.path.dirname(
-                partial_mesh_path).replace("test_partial", "test")
-        elif "train_partial" in os.path.dirname(partial_mesh_path):
-            path_full = os.path.dirname(
-                partial_mesh_path).replace("train_partial", "train")
-
+        path_full = os.path.dirname(partial_mesh_path)
+        
         full_shape = trimesh.load(os.path.join(os.path.dirname(
             path_full), gt_file_name, gt_file_name + '_normalized.obj'))
         shape_point_cloud = full_shape.sample(num_points)
@@ -80,7 +74,7 @@ def voxelized_colored_pointcloud_sampling(partial_mesh_path):
         _, idx = kdtree.query(shape_point_cloud)
         S[idx] = 1
 
-        np.savez(out_file, R=R, G=G, B=B, S=S,
+        np.savez_compressed(out_file, R=R, G=G, B=B, S=S,
                  colored_point_cloud=colored_point_cloud, bbox=bbox, res=res)
 
     except Exception as err:
