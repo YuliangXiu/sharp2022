@@ -11,8 +11,6 @@ import multiprocessing as mp
 from multiprocessing import Pool
 import argparse
 
-PATH_TO_YOUR_SMPL_MODEL = ''
-
 
 def voxelized_pointcloud_sampling(path):
     try:
@@ -25,19 +23,12 @@ def voxelized_pointcloud_sampling(path):
             out_file = os.path.dirname(path) + '/{}_voxelized_point_cloud_res{}_points{}_bbox{}.npz'\
                 .format(full_file_name, res, num_points, bbox_str)
         else:
-            if split_name == "train_partial":
-                split_name = "train_smpl"
-            elif split_name == "test_partial":
-                split_name = "test_smpl"
-
-            smpl_path = os.path.join(
-                PATH_TO_YOUR_SMPL_MODEL, gt_file_name, full_file_name + '_pose_smpl_model.obj')
             out_file = os.path.dirname(path) + '/{}_voxelized_point_cloud_res{}_points{}_bbox{}_smpl_estimated.npz'\
                 .format(full_file_name, res, num_points, bbox_str)
 
-        if os.path.exists(out_file):
-            print('File exists. Done.')
-            return
+        # if os.path.exists(out_file):
+        #     print('File exists. Done.')
+        #     return
 
         mesh = utils.as_mesh(trimesh.load(path))
         point_cloud = mesh.sample(num_points)
@@ -50,16 +41,16 @@ def voxelized_pointcloud_sampling(path):
         compressed_occupancies = np.packbits(occupancies)
 
         if args.smpl:
-            smpl_mesh = utils.as_mesh(trimesh.load(smpl_path))
+            smpl_mesh = utils.as_mesh(trimesh.load(path))
             smpl_point_cloud = mesh.sample(num_points)
             smpl_occupancies = np.zeros(len(grid_points), dtype=np.int8)
             _, idx = kdtree.query(smpl_point_cloud)
             occupancies[idx] = 1
             smpl_compressed_occupancies = np.packbits(smpl_occupancies)
-            np.savez(out_file, point_cloud=point_cloud, compressed_occupancies=compressed_occupancies, res=res,
+            np.savez_compressed(out_file, point_cloud=point_cloud, compressed_occupancies=compressed_occupancies, res=res,
                      smpl_point_cloud=smpl_point_cloud, smpl_compressed_occupancies=smpl_compressed_occupancies)
         else:
-            np.savez(out_file, point_cloud=point_cloud,
+            np.savez_compressed(out_file, point_cloud=point_cloud,
                      compressed_occupancies=compressed_occupancies, res=res)
         # print('Finished {}'.format(path))
 

@@ -62,7 +62,7 @@ def voxelized_sdf_sampling(path):
         mesh =  trimesh.Trimesh(vertices, triangles)
         mesh.export('test_sdf.obj')
 
-        np.savez(out_file, sdf = sdf, res = res)
+        np.savez_compressed(out_file, sdf = sdf, res = res)
         print('Finished {}'.format(path))
 
     except Exception as err:

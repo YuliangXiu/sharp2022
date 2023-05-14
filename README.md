@@ -64,6 +64,7 @@ We sample points near the ground truth complete surface, extract their occupancy
 ```
 python src/data_processing/boundary_sampling.py config/SHARP2022_geometry/track1_geometry.yaml --sigma 0.015
 python src/data_processing/boundary_sampling.py config/SHARP2022_geometry/track1_geometry.yaml --sigma 0.2
+python src/data_processing/uniform_sampling.py config/SHARP2022_geometry/track1_geometry.yaml
 ```
 
 

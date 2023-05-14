@@ -25,6 +25,10 @@ preprocessing:
   input_files_regex: /*/*/*-partial*.obj
  voxelized_colored_pointcloud_sampling:
   input_files_regex: /*/*/*-partial-*.obj
+#  voxelized_pointcloud_sampling:
+#   input_files_regex: /*/*/*_smpl_model.obj
+#  voxelized_colored_pointcloud_sampling:
+#   input_files_regex: /*/*/*_smpl_model.obj
 training:
  batch_size: 2
  num_workers: 0

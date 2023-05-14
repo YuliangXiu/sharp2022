@@ -61,7 +61,7 @@ def boundary_delta_sdf_sampling(mesh_path):
         sdf = mesh_to_sdf.mesh_to_sdf(scaled_mesh, scaled_points, surface_point_method='sample')
 
 
-        np.savez(out_file, points=boundary_points, sdf = sdf, grid_coords= utils.to_grid_sample_coords(boundary_points, bbox))
+        np.savez_compressed(out_file, points=boundary_points, sdf = sdf, grid_coords= utils.to_grid_sample_coords(boundary_points, bbox))
         print('Finished {}'.format(out_file))
     except:
         print('Error with {}: {}'.format(path, traceback.format_exc()))

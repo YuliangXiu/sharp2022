@@ -113,4 +113,4 @@ split_dict = {
     'predict': predict
 }
 
-np.savez(cfg['split_file'], **split_dict)
+np.savez_compressed(cfg['split_file'], **split_dict)

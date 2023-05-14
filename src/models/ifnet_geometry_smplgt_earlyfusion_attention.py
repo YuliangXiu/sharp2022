@@ -90,10 +90,11 @@ class IFNetGeometrySMPLGT_EarlyFusion_Attention(nn.Module):
         self.displacments = displacments
 
     def forward(self, batch):
-        p = batch.get('grid_coords')
-        x = batch.get('inputs')
-        x_smpl = batch.get('smpl_inputs')
-        # x_smpl = batch.get('inputs')
+        
+        p = batch.get('grid_coords')        #[2, 60000, 3]
+        x = batch.get('inputs')             #[2, 128, 128, 128]
+        x_smpl = batch.get('smpl_inputs')   #[2, 128, 128, 128]
+        
         x = x.unsqueeze(1)
         x_smpl = x_smpl.unsqueeze(1)
         p_features = p.transpose(1, -1)
@@ -101,6 +102,8 @@ class IFNetGeometrySMPLGT_EarlyFusion_Attention(nn.Module):
         displacments = torch.Tensor(self.displacments).to(
             dtype=p.dtype, device=p.device)
         p = torch.cat([p + d for d in displacments], dim=2)
+        
+        import ipdb; ipdb.set_trace()
 
         # partial inputs feature extraction
         feature_0_partial = F.grid_sample(x, p, padding_mode='border')

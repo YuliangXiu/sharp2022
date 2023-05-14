@@ -41,7 +41,7 @@ def boundary_sampling(mesh_path):
 
         occupancies = iw.implicit_waterproofing(mesh, boundary_points)[0]
 
-        np.savez(out_file, points=boundary_points, occupancies = occupancies, grid_coords= utils.to_grid_sample_coords(boundary_points, bbox))
+        np.savez_compressed(out_file, points=boundary_points, occupancies = occupancies, grid_coords= utils.to_grid_sample_coords(boundary_points, bbox))
         # print('Finished {}'.format(out_file))
     except:
         print('Error with {}: {}'.format(path, traceback.format_exc()))

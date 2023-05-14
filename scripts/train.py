@@ -1,15 +1,22 @@
+# ignore all the warnings
+import warnings
+import logging
+
+warnings.filterwarnings("ignore")
+logging.getLogger("wandb").setLevel(logging.ERROR)
+logging.getLogger("lightning").setLevel(logging.ERROR)
+logging.getLogger("trimesh").setLevel(logging.ERROR)
+
 from src import training
 from src.dataloader import IFNetDataModule
 import argparse
 import torch
-import logging
 from datetime import datetime
 import os
 import config.config_loader as cfg_loader
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.plugins import DDPPlugin
-from pytorch_lightning.utilities.distributed import rank_zero_info, rank_zero_only
+from pytorch_lightning.utilities.distributed import rank_zero_only
 
 
 @rank_zero_only
@@ -69,11 +76,9 @@ def main_train():
     log_path = os.path.join(output_dir, f"log_{time_stamp}.txt")
     setup_logging(log_path)
 
-    rank_zero_info(cfg)
-
     checkpoint = pl.callbacks.ModelCheckpoint(
         dirpath=os.path.join(output_dir, "checkpoints"),
-        verbose=True,
+        verbose=False,
         filename="best",
         mode="min",
         monitor="val/loss",
@@ -99,16 +104,13 @@ def main_train():
     else:
         logger = None
     trainer = pl.Trainer(
-        gpus=args.gpus if torch.cuda.is_available() else 0,
         max_epochs=100,
         logger=logger,
         resume_from_checkpoint=resume_path,
         callbacks=[checkpoint],
-        plugins=DDPPlugin(
-            find_unused_parameters=False) if args.gpus > 1 else None,
-        accelerator="DDP" if args.gpus > 1 else None,
-        num_sanity_val_steps=0,
-        # gradient_clip_val=10
+        accelerator="gpu",
+        devices=args.gpus,
+        num_sanity_val_steps=0
     )
 
     trainer.fit(module, datamodule)

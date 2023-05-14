@@ -54,7 +54,7 @@ def sample_colors(gt_mesh_path):
 
         colors = trimesh.visual.color.uv_to_color(np.array(uvs), texture)
 
-        np.savez(out_file, points=sample_points, grid_coords=utils.to_grid_sample_coords(
+        np.savez_compressed(out_file, points=sample_points, grid_coords=utils.to_grid_sample_coords(
             sample_points, bbox), colors=colors[:, :3])
     except Exception as err:
         print('Error with {}: {}'.format(out_file, traceback.format_exc()))

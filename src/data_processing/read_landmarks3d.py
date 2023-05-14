@@ -1,5 +1,5 @@
 import numpy as np
-from data_processing.utils import to_grid_sample_coords
+from src.data_processing.utils import to_grid_sample_coords
 
 def read(path, bbox, joint_num = 25):
     landmarks3d_list = []

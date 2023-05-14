@@ -2,6 +2,7 @@ import yaml
 import numpy as np
 import collections
 
+
 def update(d, u):
     for k, v in u.items():
         if isinstance(v, collections.abc.Mapping):
@@ -9,6 +10,7 @@ def update(d, u):
         else:
             d[k] = v
     return d
+
 
 def load(path):
     with open('config/default_values.yaml', 'r') as f:
@@ -22,6 +24,5 @@ def load(path):
 
     cfg['data_bounding_box'] = np.array(cfg['data_bounding_box'])
     cfg['data_bounding_box_str'] = ",".join(str(x) for x in cfg['data_bounding_box'])
-
 
     return cfg

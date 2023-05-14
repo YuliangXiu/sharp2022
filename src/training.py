@@ -5,7 +5,7 @@ from pytorch_lightning import LightningModule
 import numpy as np
 from src.models import get_models
 from pytorch_lightning.utilities.distributed import rank_zero_info
-import data_processing.utils as utils
+import src.data_processing.utils as utils
 import os
 import trimesh
 from scipy.spatial import cKDTree as KDTree
@@ -62,7 +62,6 @@ class IFNetTrainer(LightningModule):
         super().__init__()
         self.model = get_models()[cfg['model']]()
         # sync_batchnorm = true
-        rank_zero_info(self.model)
         self.cfg = cfg
         self.loss_weight_near = self.cfg["training"]["loss"]["weight_near"]
         self.loss_weight_far = self.cfg["training"]["loss"]["weight_far"]
@@ -252,6 +251,14 @@ class TextureTrainer(IFNetTrainer):
 
 class GeometryTrainer(IFNetTrainer):
     def compute_loss(self, batch):
+        
+        # grid_coords torch.Size([2, 60000, 3])
+        # occupancies torch.Size([2, 60000])
+        # points torch.Size([2, 60000, 3])
+        # inputs torch.Size([2, 128, 128, 128])
+        # smpl_inputs torch.Size([2, 128, 128, 128])
+        # landmarks3d torch.Size([2, 17, 3])
+        
         occ = batch.get('occupancies')
         dt_mask = batch.get('dt_mask')
         dt_mask = dt_mask.to(dtype=torch.bool)

@@ -6,18 +6,25 @@ import scipy
 import torch
 import torch.nn.functional as F
 from pytorch_lightning import LightningDataModule
-from data_processing import utils, read_landmarks3d
+from src.data_processing import utils, read_landmarks3d
 
 SEED = 777
 np.random.seed(SEED)
 
 
 def get_datasets():
-    return {'TextureDataset': TextureDataset, 'GeometryDataset': GeometryDataset, 'GeometryDataset_Pose': GeometryDataset_Pose}
+    return {
+        'TextureDataset': TextureDataset,
+        'GeometryDataset': GeometryDataset,
+        'GeometryDataset_Pose': GeometryDataset_Pose
+    }
+
 
 PATH_TO_YOUR_RECONSTRUCTED = ''
 
+
 class IFNetDataModule(LightningDataModule):
+
     def __init__(self, cfg):
         super().__init__()
         self.dataset = get_datasets()[cfg['dataset']]
@@ -35,19 +42,32 @@ class IFNetDataModule(LightningDataModule):
             self.predict_dataset = self.dataset("predict", self.cfg)
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
+        return DataLoader(self.train_dataset,
+                          batch_size=self.batch_size,
+                          shuffle=True,
+                          num_workers=self.num_workers)
 
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=1, shuffle=False, num_workers=self.num_workers)
+        return DataLoader(self.val_dataset,
+                          batch_size=1,
+                          shuffle=False,
+                          num_workers=self.num_workers)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=1, shuffle=False, num_workers=self.num_workers)
+        return DataLoader(self.test_dataset,
+                          batch_size=1,
+                          shuffle=False,
+                          num_workers=self.num_workers)
 
     def predict_dataloader(self):
-        return DataLoader(self.predict_dataset, batch_size=1, shuffle=False, num_workers=self.num_workers)
+        return DataLoader(self.predict_dataset,
+                          batch_size=1,
+                          shuffle=False,
+                          num_workers=self.num_workers)
 
 
 class IFNetDataset(Dataset):
+
     def __init__(self, mode, cfg):
         raise NotImplementedError
 
@@ -98,18 +118,21 @@ class TextureDataset(IFNetDataset):
 
             data_test_filtered = data_test_filtered[index_test]
 
-            self.data = np.concatenate((data_train_filtered,
-                                        data_val_filtered, data_test_filtered), axis=0)
-            print(">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".format(
-                cfg['overlap_score_threshold'], mode, len(data_train) + len(data_val) + len(data_test), len(self.data)))
+            self.data = np.concatenate((data_train_filtered, data_val_filtered, data_test_filtered),
+                                       axis=0)
+            print(
+                ">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".
+                format(cfg['overlap_score_threshold'], mode,
+                       len(data_train) + len(data_val) + len(data_test), len(self.data)))
 
         elif mode != 'predict':
             self.data = np.load(cfg['split_file'])[mode]
-            scores = np.load(cfg['split_file'])[mode+'_score']
-            self.data = np.array(self.data)[np.where(
-                np.array(scores) > cfg['overlap_score_threshold'])]
-            print(">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".format(
-                cfg['overlap_score_threshold'], mode, len(scores), len(self.data)))
+            scores = np.load(cfg['split_file'])[mode + '_score']
+            self.data = np.array(
+                self.data)[np.where(np.array(scores) > cfg['overlap_score_threshold'])]
+            print(
+                ">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".
+                format(cfg['overlap_score_threshold'], mode, len(scores), len(self.data)))
 
         else:
             self.data = np.load(cfg['split_file'])[mode]
@@ -140,80 +163,94 @@ class TextureDataset(IFNetDataset):
         full_file_name = os.path.splitext(path.split(os.sep)[-1])[0]
 
         if self.mode == 'predict':
-            voxel_path = os.path.join(self.path, split, gt_file_name,
-                                      '{}_voxelized_colored_point_cloud_res{}_points{}_bbox{}_predict.npz'
-                                      .format(full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
+            voxel_path = os.path.join(
+                self.path, split, gt_file_name,
+                '{}_voxelized_colored_point_cloud_res{}_points{}_bbox{}_predict.npz'.format(
+                    full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
 
             R = np.load(voxel_path)['R']
             G = np.load(voxel_path)['G']
             B = np.load(voxel_path)['B']
             S = np.load(voxel_path)['S']
 
-            R = np.reshape(R, (self.res,)*3)
-            G = np.reshape(G, (self.res,)*3)
-            B = np.reshape(B, (self.res,)*3)
-            S = np.reshape(S, (self.res,)*3)
+            R = np.reshape(R, (self.res,) * 3)
+            G = np.reshape(G, (self.res,) * 3)
+            B = np.reshape(B, (self.res,) * 3)
+            S = np.reshape(S, (self.res,) * 3)
             input = np.array([R, G, B, S])
 
-            path_surface = os.path.join(PATH_TO_YOUR_RECONSTRUCTED,
-                                        gt_file_name, full_file_name + '_reconstruction.obj')
+            path_surface = os.path.join(PATH_TO_YOUR_RECONSTRUCTED, gt_file_name,
+                                        full_file_name + '_reconstruction.obj')
             if not os.path.exists(path_surface):
                 print(path_surface, "not exist")
                 # continue
             mesh = trimesh.load(path_surface)
             # create new uncolored mesh for color prediction
             pred_mesh = trimesh.Trimesh(mesh.vertices, mesh.faces)
-            pred_verts_gird_coords = utils.to_grid_sample_coords(
-                pred_mesh.vertices, self.bbox)
+            pred_verts_gird_coords = utils.to_grid_sample_coords(pred_mesh.vertices, self.bbox)
 
-            return {'inputs': np.array(input, dtype=np.float32), 'path': path, 'mesh_path': path_surface, 'grid_coords': np.array(pred_verts_gird_coords, dtype=np.float32)}
+            return {
+                'inputs': np.array(input, dtype=np.float32),
+                'path': path,
+                'mesh_path': path_surface,
+                'grid_coords': np.array(pred_verts_gird_coords, dtype=np.float32)
+            }
 
-        voxel_path = os.path.join(self.path, split, gt_file_name,
-                                  '{}_voxelized_colored_point_cloud_res{}_points{}_bbox{}.npz'
-                                  .format(full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
+        voxel_path = os.path.join(
+            self.path, split, gt_file_name,
+            '{}_voxelized_colored_point_cloud_res{}_points{}_bbox{}.npz'.format(
+                full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
 
         R = np.load(voxel_path)['R']
         G = np.load(voxel_path)['G']
         B = np.load(voxel_path)['B']
         S = np.load(voxel_path)['S']
 
-        R = np.reshape(R, (self.res,)*3)
-        G = np.reshape(G, (self.res,)*3)
-        B = np.reshape(B, (self.res,)*3)
-        S = np.reshape(S, (self.res,)*3)
+        R = np.reshape(R, (self.res,) * 3)
+        G = np.reshape(G, (self.res,) * 3)
+        B = np.reshape(B, (self.res,) * 3)
+        S = np.reshape(S, (self.res,) * 3)
         input = np.array([R, G, B, S])
 
-        rgb_samples_path = os.path.join(self.path, split[:-8], gt_file_name,
-                                        '{}_normalized_color_samples{}_sigma{}_bbox{}.npz'
-                                        .format(gt_file_name, self.num_gt_rgb_samples, self.sigma_sampling, self.bbox_str))
+        rgb_samples_path = os.path.join(
+            self.path, split[:-8], gt_file_name,
+            '{}_normalized_color_samples{}_sigma{}_bbox{}.npz'.format(gt_file_name,
+                                                                      self.num_gt_rgb_samples,
+                                                                      self.sigma_sampling,
+                                                                      self.bbox_str))
 
         rgb_samples_npz = np.load(rgb_samples_path)
         rgb_coords_sigma = rgb_samples_npz['grid_coords']
         rgb_values_sigma = rgb_samples_npz['colors']
-        subsample_indices = np.random.randint(
-            0, len(rgb_values_sigma), int(self.sample_points_per_object * self.ratio))
+        subsample_indices = np.random.randint(0, len(rgb_values_sigma),
+                                              int(self.sample_points_per_object * self.ratio))
         rgb_coords_sigma = rgb_coords_sigma[subsample_indices]
         rgb_values_sigma = rgb_values_sigma[subsample_indices]
 
-        rgb_samples_clean_path = os.path.join(self.path, split[:-8], gt_file_name,
-                                              '{}_normalized_color_samples{}_bbox{}.npz'
-                                              .format(gt_file_name, self.num_gt_rgb_samples, self.bbox_str))
+        rgb_samples_clean_path = os.path.join(
+            self.path, split[:-8], gt_file_name,
+            '{}_normalized_color_samples{}_bbox{}.npz'.format(gt_file_name, self.num_gt_rgb_samples,
+                                                              self.bbox_str))
 
         rgb_samples_npz_clean = np.load(rgb_samples_clean_path)
         rgb_coords_clean = rgb_samples_npz_clean['grid_coords']
         rgb_values_clean = rgb_samples_npz_clean['colors']
 
         subsample_indices_clean = np.random.randint(
-            0, len(rgb_values_clean), self.sample_points_per_object - int(self.sample_points_per_object * self.ratio))
+            0, len(rgb_values_clean),
+            self.sample_points_per_object - int(self.sample_points_per_object * self.ratio))
         rgb_coords_clean = rgb_coords_clean[subsample_indices_clean]
         rgb_values_clean = rgb_values_clean[subsample_indices_clean]
 
-        rgb_coords = np.concatenate((
-            rgb_coords_sigma, rgb_coords_clean), axis=0)
-        rgb_values = np.concatenate((
-            rgb_values_sigma, rgb_values_clean), axis=0)
+        rgb_coords = np.concatenate((rgb_coords_sigma, rgb_coords_clean), axis=0)
+        rgb_values = np.concatenate((rgb_values_sigma, rgb_values_clean), axis=0)
 
-        return {'grid_coords': np.array(rgb_coords, dtype=np.float32), 'rgb': np.array(rgb_values, dtype=np.float32), 'inputs': np.array(input, dtype=np.float32), 'path': path}
+        return {
+            'grid_coords': np.array(rgb_coords, dtype=np.float32),
+            'rgb': np.array(rgb_values, dtype=np.float32),
+            'inputs': np.array(input, dtype=np.float32),
+            'path': path
+        }
 
 
 class GeometryDataset(IFNetDataset):
@@ -224,11 +261,12 @@ class GeometryDataset(IFNetDataset):
         self.mode = mode
         self.data = np.load(cfg['split_file'])[mode]
         if mode != 'predict':
-            scores = np.load(cfg['split_file'])[mode+'_score']
-            self.data = np.array(self.data)[np.where(
-                np.array(scores) > cfg['overlap_score_threshold'])]
-            print(">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".format(
-                cfg['overlap_score_threshold'], mode, len(scores), len(self.data)))
+            scores = np.load(cfg['split_file'])[mode + '_score']
+            self.data = np.array(
+                self.data)[np.where(np.array(scores) > cfg['overlap_score_threshold'])]
+            print(
+                ">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".
+                format(cfg['overlap_score_threshold'], mode, len(scores), len(self.data)))
 
         self.res = cfg['input_resolution']
         self.bbox_str = cfg['data_bounding_box_str']
@@ -244,13 +282,13 @@ class GeometryDataset(IFNetDataset):
         self.num_sample_points = cfg['training']['sample_points_per_object']
         self.pointcloud_samples = cfg['input_points_number']
         # compute number of samples per sampling method
-        self.num_samples = np.rint(
-            self.sample_distribution * self.num_sample_points).astype(np.uint32)
+        self.num_samples = np.rint(self.sample_distribution * self.num_sample_points).astype(
+            np.uint32)
 
         bbox = cfg['data_bounding_box']
         resolution = cfg['generation']['retrieval_resolution']
-        grid_points = utils.create_grid_points_from_xyz_bounds(
-            *self.cfg['data_bounding_box'], resolution)
+        grid_points = utils.create_grid_points_from_xyz_bounds(*self.cfg['data_bounding_box'],
+                                                               resolution)
         grid_coords = utils.to_grid_sample_coords(grid_points, bbox)
         self.grid_coords = grid_coords.reshape([len(grid_points), 3])
 
@@ -265,31 +303,34 @@ class GeometryDataset(IFNetDataset):
         gt_file_name = path.split(os.sep)[-2]
         full_file_name = os.path.splitext(path.split(os.sep)[-1])[0]
 
-        voxel_path = os.path.join(self.path, split, gt_file_name,
-                                  '{}_voxelized_point_cloud_res{}_points{}_bbox{}.npz'
-                                  .format(full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
+        voxel_path = os.path.join(
+            self.path, split, gt_file_name,
+            '{}_voxelized_point_cloud_res{}_points{}_bbox{}.npz'.format(
+                full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
 
-        occupancies = np.unpackbits(
-            np.load(voxel_path)['compressed_occupancies'])
-        input = np.reshape(occupancies, (self.res,)*3)
+        occupancies = np.unpackbits(np.load(voxel_path)['compressed_occupancies'])
+        input = np.reshape(occupancies, (self.res,) * 3)
 
         if self.mode == 'predict' or self.mode == 'test':
-            return {'inputs': np.array(input, dtype=np.float32), 'path': path, 'grid_coords': np.array(self.grid_coords, dtype=np.float32)}
+            return {
+                'inputs': np.array(input, dtype=np.float32),
+                'path': path,
+                'grid_coords': np.array(self.grid_coords, dtype=np.float32)
+            }
         points = []
         coords = []
         occupancies = []
 
         for i, num in enumerate(self.num_samples):
-            boundary_samples_path = os.path.join(self.path, split[:-8], gt_file_name,
-                                                 '{}_normalized_boundary_{}_samples.npz'
-                                                 .format(gt_file_name, self.sample_sigmas[i]))
+            boundary_samples_path = os.path.join(
+                self.path, split[:-8], gt_file_name,
+                '{}_normalized_boundary_{}_samples.npz'.format(gt_file_name, self.sample_sigmas[i]))
 
             boundary_samples_npz = np.load(boundary_samples_path)
             boundary_sample_points = boundary_samples_npz['points']
             boundary_sample_coords = boundary_samples_npz['grid_coords']
             boundary_sample_occupancies = boundary_samples_npz['occupancies']
-            subsample_indices = np.random.randint(
-                0, len(boundary_sample_points), num)
+            subsample_indices = np.random.randint(0, len(boundary_sample_points), num)
             points.extend(boundary_sample_points[subsample_indices])
             coords.extend(boundary_sample_coords[subsample_indices])
             occupancies.extend(boundary_sample_occupancies[subsample_indices])
@@ -298,7 +339,13 @@ class GeometryDataset(IFNetDataset):
         assert len(occupancies) == self.num_sample_points
         assert len(coords) == self.num_sample_points
 
-        return {'grid_coords': np.array(coords, dtype=np.float32), 'occupancies': np.array(occupancies, dtype=np.float32), 'points': np.array(points, dtype=np.float32), 'inputs': np.array(input, dtype=np.float32), 'path': path}
+        return {
+            'grid_coords': np.array(coords, dtype=np.float32),
+            'occupancies': np.array(occupancies, dtype=np.float32),
+            'points': np.array(points, dtype=np.float32),
+            'inputs': np.array(input, dtype=np.float32),
+            'path': path
+        }
 
 
 class GeometryDataset_Pose(IFNetDataset):
@@ -338,18 +385,21 @@ class GeometryDataset_Pose(IFNetDataset):
 
             data_test_filtered = data_test_filtered[index_test]
 
-            self.data = np.concatenate((data_train_filtered,
-                                        data_val_filtered, data_test_filtered), axis=0)
-            print(">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".format(
-                cfg['overlap_score_threshold'], mode, len(data_train) + len(data_val) + len(data_test), len(self.data)))
+            self.data = np.concatenate((data_train_filtered, data_val_filtered, data_test_filtered),
+                                       axis=0)
+            print(
+                ">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".
+                format(cfg['overlap_score_threshold'], mode,
+                       len(data_train) + len(data_val) + len(data_test), len(self.data)))
 
         elif mode != 'predict':
             self.data = np.load(cfg['split_file'])[mode]
-            scores = np.load(cfg['split_file'])[mode+'_score']
-            self.data = np.array(self.data)[np.where(
-                np.array(scores) > cfg['overlap_score_threshold'])]
-            print(">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".format(
-                cfg['overlap_score_threshold'], mode, len(scores), len(self.data)))
+            scores = np.load(cfg['split_file'])[mode + '_score']
+            self.data = np.array(
+                self.data)[np.where(np.array(scores) > cfg['overlap_score_threshold'])]
+            print(
+                ">>>>>>>>> With a threshold of {}, the number of {} data is filtered from {} to {}".
+                format(cfg['overlap_score_threshold'], mode, len(scores), len(self.data)))
 
         else:
             self.data = np.load(cfg['split_file'])[mode]
@@ -380,17 +430,16 @@ class GeometryDataset_Pose(IFNetDataset):
         self.num_sample_points = cfg['training']['sample_points_per_object']
         self.pointcloud_samples = cfg['input_points_number']
         # compute number of samples per sampling method
-        self.num_samples = np.rint(
-            self.sample_distribution * self.num_sample_points).astype(np.uint32)
+        self.num_samples = np.rint(self.sample_distribution * self.num_sample_points).astype(
+            np.uint32)
 
         bbox = cfg['data_bounding_box']
         resolution = cfg['generation']['retrieval_resolution']
-        grid_points = utils.create_grid_points_from_xyz_bounds(
-            *self.cfg['data_bounding_box'], resolution)
+        grid_points = utils.create_grid_points_from_xyz_bounds(*self.cfg['data_bounding_box'],
+                                                               resolution)
         grid_coords = utils.to_grid_sample_coords(grid_points, bbox)
         self.grid_coords = grid_coords.reshape([len(grid_points), 3])
-        self.mapping = [8, 12, 9, 13, 10, 21,
-                        24, 20, 23, 1, 0, 5, 2, 6, 3, 7, 4]
+        self.mapping = [8, 12, 9, 13, 10, 21, 24, 20, 23, 1, 0, 5, 2, 6, 3, 7, 4]
 
     def __len__(self):
         return len(self.data)
@@ -401,52 +450,48 @@ class GeometryDataset_Pose(IFNetDataset):
         challenge = path.split(os.sep)[-4]
         split = path.split(os.sep)[-3]
         gt_file_name = path.split(os.sep)[-2]
-        full_file_name = os.path.splitext(path.split(os.sep)[-1])[0]
+        full_file_name = os.path.splitext(path.split(os.sep)[-1])[0][:-23] + "_smpl_model"
 
         if self.refine_with_estimated_smpl and self.mode != 'predict':
-            voxel_path = os.path.join(self.path, split, gt_file_name,
-                                      '{}_voxelized_point_cloud_res{}_points{}_bbox{}_smpl_estimated.npz'
-                                      .format(full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
+            voxel_path = os.path.join(
+                self.path, split + "_smpl", gt_file_name,
+                '{}_voxelized_point_cloud_res{}_points{}_bbox{}_smpl_estimated.npz'.format(
+                    full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
         else:
 
-            voxel_path = os.path.join(self.path, split, gt_file_name,
-                                      '{}_voxelized_point_cloud_res{}_points{}_bbox{}_smpl.npz'
-                                      .format(full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
-        # else:
-        #     voxel_path = os.path.join(self.path, split, gt_file_name,
-        #                               '{}_voxelized_point_cloud_res{}_points{}_bbox{}.npz'
-        #                               .format(full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
+            voxel_path = os.path.join(
+                self.path, split + "_smpl", gt_file_name,
+                '{}_voxelized_point_cloud_res{}_points{}_bbox{}_smpl.npz'.format(
+                    full_file_name, self.res, self.pointcloud_samples, self.bbox_str))
 
-        # use standard
-        # 170410-005-m-tt3n-a65a-low-res-result_normalized
-        # voxel_path = "170410-005-m-tt3n-a65a-low-res-result_normalized_voxelized_point_cloud_res128_points100000_bbox-0.8,0.8,-0.15,2.1,-0.8,0.8.npz"
+        occupancies = np.unpackbits(np.load(voxel_path)['compressed_occupancies'])
+        input = np.reshape(occupancies, (self.res,) * 3)
 
-        occupancies = np.unpackbits(
-            np.load(voxel_path)['compressed_occupancies'])
-        input = np.reshape(occupancies, (self.res,)*3)
-
-        smpl_occupancies = np.unpackbits(
-            np.load(voxel_path)['smpl_compressed_occupancies'])
-        smpl_input = np.reshape(smpl_occupancies, (self.res,)*3)
+        smpl_occupancies = np.unpackbits(np.load(voxel_path)['smpl_compressed_occupancies'])
+        smpl_input = np.reshape(smpl_occupancies, (self.res,) * 3)
 
         if self.mode == 'predict' or self.mode == 'test':
-            return {'inputs': np.array(input, dtype=np.float32), 'smpl_inputs': np.array(smpl_input, dtype=np.float32), 'path': path, 'grid_coords': np.array(self.grid_coords, dtype=np.float32)}
+            return {
+                'inputs': np.array(input, dtype=np.float32),
+                'smpl_inputs': np.array(smpl_input, dtype=np.float32),
+                'path': path,
+                'grid_coords': np.array(self.grid_coords, dtype=np.float32)
+            }
 
         points = []
         coords = []
         occupancies = []
 
         for i, num in enumerate(self.num_samples):
-            boundary_samples_path = os.path.join(self.path, split[:-8], gt_file_name,
-                                                 '{}_normalized_boundary_{}_samples.npz'
-                                                 .format(gt_file_name, self.sample_sigmas[i]))
+            boundary_samples_path = os.path.join(
+                self.path, split, gt_file_name,
+                '{}_normalized_boundary_{}_samples.npz'.format(gt_file_name, self.sample_sigmas[i]))
 
             boundary_samples_npz = np.load(boundary_samples_path)
             boundary_sample_points = boundary_samples_npz['points']
             boundary_sample_coords = boundary_samples_npz['grid_coords']
             boundary_sample_occupancies = boundary_samples_npz['occupancies']
-            subsample_indices = np.random.randint(
-                0, len(boundary_sample_points), num)
+            subsample_indices = np.random.randint(0, len(boundary_sample_points), num)
             points.extend(boundary_sample_points[subsample_indices])
             coords.extend(boundary_sample_coords[subsample_indices])
             occupancies.extend(boundary_sample_occupancies[subsample_indices])
@@ -455,7 +500,7 @@ class GeometryDataset_Pose(IFNetDataset):
         assert len(occupancies) == self.num_sample_points
         assert len(coords) == self.num_sample_points
 
-        occ_dt = scipy.ndimage.distance_transform_edt(1-input)
+        occ_dt = scipy.ndimage.distance_transform_edt(1 - input)
         occ_dt = torch.Tensor(occ_dt).unsqueeze(0).unsqueeze(0)
         coords_dt = torch.Tensor(coords).unsqueeze(0).unsqueeze(0).unsqueeze(0)
         dt = F.grid_sample(occ_dt, coords_dt, padding_mode='border')
@@ -463,12 +508,18 @@ class GeometryDataset_Pose(IFNetDataset):
 
         # hard coded
         dt_mask = dt >= 16
-        landmarks3d_path = os.path.join(
-            self.path, split[:-8], gt_file_name, 'landmarks3d.txt')
-        landmarks3d = read_landmarks3d.read(
-            landmarks3d_path, self.cfg["data_bounding_box"])[self.mapping]
+        landmarks3d_path = os.path.join(self.path, split, gt_file_name, 'landmarks3d.txt')
+        landmarks3d = read_landmarks3d.read(landmarks3d_path,
+                                            self.cfg["data_bounding_box"])[self.mapping]
         landmarks3d = np.nan_to_num(landmarks3d)
 
-        return {'grid_coords': np.array(coords, dtype=np.float32), 'occupancies': np.array(occupancies, dtype=np.float32), 'points': np.array(points, dtype=np.float32), 'inputs': np.array(input, dtype=np.float32), 'smpl_inputs': np.array(smpl_input, dtype=np.float32), 'landmarks3d': np.array(landmarks3d, dtype=np.float32), 'path': path, 'dt_mask': np.array(dt_mask, dtype=np.uint8)}
-
-
+        return {
+            'grid_coords': np.array(coords, dtype=np.float32),
+            'occupancies': np.array(occupancies, dtype=np.float32),
+            'points': np.array(points, dtype=np.float32),
+            'inputs': np.array(input, dtype=np.float32),
+            'smpl_inputs': np.array(smpl_input, dtype=np.float32),
+            'landmarks3d': np.array(landmarks3d, dtype=np.float32),
+            'path': path,
+            'dt_mask': np.array(dt_mask, dtype=np.uint8)
+        }

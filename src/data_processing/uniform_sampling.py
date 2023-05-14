@@ -3,13 +3,13 @@ import os
 import sys
 import config.config_loader as cfg_loader
 import tqdm
-import data_processing.utils as utils
+import src.data_processing.utils as utils
 import traceback
 import argparse
 from multiprocessing import Pool
 import multiprocessing as mp
 from glob import glob
-import data_processing.implicit_waterproofing as iw
+import src.data_processing.implicit_waterproofing as iw
 import numpy as np
 import trimesh
 
@@ -44,9 +44,9 @@ def boundary_sampling(mesh_path):
 
         occupancies = iw.implicit_waterproofing(mesh, grid_points)[0]
 
-        np.savez(out_file, points=grid_points, occupancies=occupancies,
+        np.savez_compressed(out_file, points=grid_points, occupancies=occupancies,
                  grid_coords=utils.to_grid_sample_coords(grid_points, bbox))
-        print('Finished {}'.format(out_file))
+        # print('Finished {}'.format(out_file))
     except:
         print('Error with {}: {}'.format(path, traceback.format_exc()))
 
@@ -56,7 +56,6 @@ if __name__ == '__main__':
         description='Run boundary sampling'
     )
     parser.add_argument('config', type=str, help='Path to config file.')
-    # parser.add_argument('--sigma', type=float)
     args = parser.parse_args()
 
     cfg = cfg_loader.load(args.config)
